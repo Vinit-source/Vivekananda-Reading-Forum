@@ -1,15 +1,15 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { AdminPanel } from './components/AdminPanel';
 import { AppState, BookType, DAYS_OF_WEEK } from './types';
 import { INITIAL_STATE, SCHEDULE_MAP } from './constants';
-import { Image as ImageIcon, FileText, Download, ExternalLink } from 'lucide-react';
+import { Image as ImageIcon, FileText, ExternalLink } from 'lucide-react';
 
 export default function App() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [todayIndex, setTodayIndex] = useState(new Date().getDay());
-
+  const todayIndexArray = useState(new Date().getDay());
+  const todayIndex = todayIndexArray[0];
   // Determine current book based on day
   const currentBookId = SCHEDULE_MAP[todayIndex];
   const currentBook = currentBookId ? state.books[currentBookId] : null;

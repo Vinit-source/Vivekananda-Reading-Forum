@@ -1,7 +1,6 @@
 import React from 'react';
-import { X, Upload, FileText, Music, Edit2 } from 'lucide-react';
+import { X, Upload, FileText, Music } from 'lucide-react';
 import { AppState, BookType } from '../types';
-import { Button } from './Button';
 
 interface AdminPanelProps {
   state: AppState;
