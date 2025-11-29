@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { AdminPanel } from './components/AdminPanel';
 import { AppState, BookType, DAYS_OF_WEEK } from './types';
