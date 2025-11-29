@@ -5,8 +5,7 @@ import {
   Settings, 
   ChevronRight, 
   ChevronLeft, 
-  Upload,
-  Volume2
+  Upload
 } from 'lucide-react';
 import { Button } from './Button';
 
@@ -14,7 +13,7 @@ interface SidebarProps {
   bellAudioUrl: string | null;
   currentBookAudioUrl: string | null;
   onUploadBell: (file: File) => void;
-  onUploadBookAudio: (file: File) => void; // This uploads/overrides the CURRENT book's audio for temporary playback if needed, or we rely on admin
+  onUploadBookAudio: (file: File) => void; // Keeping prop interface consistent though upload is primarily in Admin
   onToggleAdmin: () => void;
   isAdminOpen: boolean;
 }
@@ -29,10 +28,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   
   const bellInputRef = useRef<HTMLInputElement>(null);
+  const bellAudioRef = useRef<HTMLAudioElement>(null);
+  const musicAudioRef = useRef<HTMLAudioElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, callback: (f: File) => void) => {
     if (e.target.files && e.target.files[0]) {
       callback(e.target.files[0]);
+    }
+  };
+
+  const toggleAudio = (ref: React.RefObject<HTMLAudioElement | null>) => {
+    const audio = ref.current;
+    if (!audio) return;
+    
+    if (audio.paused) {
+        audio.play().catch(e => console.error("Error playing audio:", e));
+    } else {
+        audio.pause();
     }
   };
 
@@ -58,8 +70,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         
         {/* Bell Section */}
         <div className={`px-2 py-4 ${isOpen ? 'opacity-100' : 'opacity-100 flex flex-col items-center'}`}>
-            <div className="flex items-center gap-3 mb-2 px-2">
-                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0 text-orange-400">
+            <div 
+                className="flex items-center gap-3 mb-2 px-2 cursor-pointer group hover:bg-blue-900/40 rounded-lg p-1 transition-all"
+                onClick={() => toggleAudio(bellAudioRef)}
+                title="Click to Toggle Bell Sound"
+            >
+                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0 text-orange-400 group-hover:bg-orange-500/30 transition-colors">
                     <Bell size={20} />
                 </div>
                 <span className={`font-semibold whitespace-nowrap transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
@@ -76,32 +92,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onChange={(e) => handleFileChange(e, onUploadBell)}
             />
 
-            {isOpen && (
-                <div className="px-2">
-                    <audio 
-                        controls 
-                        src={bellAudioUrl || undefined} 
-                        className="w-full h-8 mb-2 invert-[.9] sepia saturate-200 hue-rotate-[340deg]"
-                    />
-                    <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        className="w-full text-xs"
-                        icon={<Upload size={14} />}
-                        onClick={() => bellInputRef.current?.click()}
-                    >
-                        {bellAudioUrl ? 'Change Bell' : 'Upload Bell'}
-                    </Button>
-                </div>
-            )}
+            {/* Audio Controls - Always rendered but hidden via CSS to persist playback */}
+            <div className={`px-2 transition-all duration-300 ${isOpen ? 'block opacity-100' : 'hidden opacity-0'}`}>
+                <audio 
+                    ref={bellAudioRef}
+                    controls 
+                    src={bellAudioUrl || undefined} 
+                    className="w-full h-8 mb-2 invert-[.9] sepia saturate-200 hue-rotate-[340deg]"
+                />
+                <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="w-full text-xs"
+                    icon={<Upload size={14} />}
+                    onClick={() => bellInputRef.current?.click()}
+                >
+                    {bellAudioUrl ? 'Change Bell' : 'Upload Bell'}
+                </Button>
+            </div>
         </div>
 
         <div className="border-t border-blue-900 mx-4"></div>
 
         {/* Classical/Book Music Section */}
         <div className={`px-2 py-4 ${isOpen ? 'opacity-100' : 'opacity-100 flex flex-col items-center'}`}>
-            <div className="flex items-center gap-3 mb-2 px-2">
-                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0 text-orange-400">
+            <div 
+                className="flex items-center gap-3 mb-2 px-2 cursor-pointer group hover:bg-blue-900/40 rounded-lg p-1 transition-all"
+                onClick={() => toggleAudio(musicAudioRef)}
+                title="Click to Toggle Background Music"
+            >
+                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0 text-orange-400 group-hover:bg-orange-500/30 transition-colors">
                     <Music size={20} />
                 </div>
                 <span className={`font-semibold whitespace-nowrap transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
@@ -109,24 +129,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </span>
             </div>
 
-            {isOpen && (
-                <div className="px-2">
-                    {currentBookAudioUrl ? (
-                        <>
-                             <div className="text-xs text-blue-200 mb-1">Playing scheduled track</div>
-                             <audio 
-                                controls 
-                                src={currentBookAudioUrl} 
-                                className="w-full h-8 mb-2 invert-[.9] sepia saturate-200 hue-rotate-[340deg]"
-                            />
-                        </>
-                    ) : (
-                        <div className="text-xs text-blue-300 italic mb-2">
-                            No audio assigned for today's book. Use Admin to configure.
-                        </div>
-                    )}
-                </div>
-            )}
+            <div className={`px-2 transition-all duration-300 ${isOpen ? 'block opacity-100' : 'hidden opacity-0'}`}>
+                {currentBookAudioUrl ? (
+                    <>
+                         <div className="text-xs text-blue-200 mb-1">Playing scheduled track</div>
+                         <audio 
+                            ref={musicAudioRef}
+                            controls 
+                            src={currentBookAudioUrl} 
+                            className="w-full h-8 mb-2 invert-[.9] sepia saturate-200 hue-rotate-[340deg]"
+                        />
+                    </>
+                ) : (
+                    <div className="text-xs text-blue-300 italic mb-2">
+                        No audio assigned for today's book. Use Admin to configure.
+                    </div>
+                )}
+            </div>
         </div>
 
       </div>
